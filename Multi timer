@@ -1,0 +1,141 @@
+import 'package:flutter/material.dart';
+import 'dart:async';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Multi timer',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: TimerApp(),
+    );
+  }
+}
+
+class TimerApp extends StatefulWidget {
+  @override
+  _TimerAppState createState() => _TimerAppState();
+}
+
+class _TimerAppState extends State<TimerApp> {
+  List<TimerData> timers = [];
+
+  void addTimer() {
+    setState(() {
+      timers.add(TimerData(onUpdate: () => setState(() {})));
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Multi timer'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.add),
+            onPressed: addTimer,
+          ),
+        ],
+      ),
+      body: ListView.builder(
+        itemCount: timers.length,
+        itemBuilder: (context, index) {
+          return TimerWidget(
+            timerData: timers[index],
+            onDelete: () {
+              setState(() {
+                timers.removeAt(index);
+              });
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class TimerData {
+  int seconds = 0;
+  Timer? timer;
+  final VoidCallback onUpdate;
+
+  TimerData({required this.onUpdate});
+
+  void start() {
+    timer = Timer.periodic(Duration(seconds: 1), (Timer t) {
+      seconds++;
+      onUpdate(); 
+    });
+  }
+
+  void stop() {
+    timer?.cancel();
+  }
+
+  void reset() {
+    seconds = 0;
+    stop();
+    onUpdate(); 
+  }
+
+  void dispose() {
+    stop();
+  }
+}
+
+class TimerWidget extends StatelessWidget {
+  final TimerData timerData;
+  final VoidCallback onDelete;
+
+  TimerWidget({required this.timerData, required this.onDelete});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: EdgeInsets.all(8.0),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('${timerData.seconds} seconds', style: TextStyle(fontSize: 24)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    timerData.start();
+                  },
+                  child: Text('Start'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    timerData.stop();
+                  },
+                  child: Text('Stop'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    timerData.reset();
+                  },
+                  child: Text('Reset'),
+                ),
+                ElevatedButton(
+                  onPressed: onDelete,
+                  child: Text('Delete'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
